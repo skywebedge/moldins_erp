@@ -508,8 +508,8 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   const resolvedHeaderAction = actionButton || headerActions;
 
-  // Render protective loading/redirect screen when unauthenticated or unmounted so dashboard is never exposed and SSR matches client hydration
-  if (!mounted || loading || !user) {
+  // Render protective loading/redirect screen only when user session is unverified
+  if ((!mounted && !user) || (loading && !user)) {
     return (
       <div className="min-h-screen bg-page flex flex-col items-center justify-center p-6 text-center select-none">
         <div className="w-14 h-14 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-2xl shadow-xl shadow-brand/20 mb-4 animate-pulse">
@@ -772,7 +772,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          prefetch={true}
+                          prefetch={false}
                           title={sidebarCollapsed ? label : undefined}
                           className={`flex items-center min-h-[36px] rounded text-sm transition-colors cursor-pointer ${
                             sidebarCollapsed ? 'justify-center p-2' : 'px-2.5 py-1.5 gap-2.5'

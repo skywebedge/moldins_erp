@@ -48,7 +48,7 @@ function LoginForm() {
           ? '/site/dashboard'
           : '/factory/dashboard';
       const targetRoute = redirectParam && redirectParam.startsWith('/') ? redirectParam : defaultRoute;
-      window.location.href = targetRoute;
+      router.replace(targetRoute);
     }
   }, [user, redirectParam]);
 
@@ -122,7 +122,7 @@ function LoginForm() {
             ? '/site/dashboard'
             : '/factory/dashboard';
         const targetRoute = redirectParam && redirectParam.startsWith('/') ? redirectParam : defaultRoute;
-        window.location.href = targetRoute;
+        router.replace(targetRoute);
       } else {
         const errorText =
           result.message ||

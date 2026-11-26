@@ -26,17 +26,36 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('moldins_user');
+        const token = localStorage.getItem('moldins_token');
+        if (saved && token) {
+          return JSON.parse(saved);
+        }
+      } catch {}
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('moldins_token');
+    }
+    return false;
+  });
 
   const fetchCurrentUser = async () => {
     try {
       // Check stored token in localStorage as fallback
       const token = typeof window !== 'undefined' ? localStorage.getItem('moldins_token') : null;
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
       }
+
+      const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
 
       // Try relative URL first (leverages Next.js rewrite and avoids cross-origin issues)
       let res: Response | null = await fetch('/api/auth/me', {
@@ -62,29 +81,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
       }
-      setUser(null);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('moldins_user');
+
+      // Only invalidate if server explicitly returned 401/403 (unauthorized)
+      if (res && (res.status === 401 || res.status === 403)) {
+        setUser(null);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('moldins_user');
+          localStorage.removeItem('moldins_token');
+        }
       }
     } catch (err) {
-      setUser(null);
+      // Network hiccup should NOT kick user out if they have local token
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Fast synchronous restore from localStorage upon client mount (prevents SSR hydration mismatch)
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('moldins_user');
-        const token = localStorage.getItem('moldins_token');
-        if (saved && token) {
-          setUser(JSON.parse(saved));
-          setLoading(false);
-        }
-      } catch {}
-    }
     fetchCurrentUser();
   }, []);
 
@@ -107,25 +120,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const attemptLogin = async (url: string) => {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: payload,
-      });
-      return await res.json();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7000);
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: payload,
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return await res.json();
+      } catch (e) {
+        clearTimeout(timeoutId);
+        throw e;
+      }
     };
 
     try {
       // 1. Try relative endpoint first (works cleanly on any domain/port via Next.js proxy rewrite)
       let data = await attemptLogin('/api/auth/login').catch(() => null);
 
-      // 2. Only fallback if network failed entirely (data is null)
+      // 2. Only fallback if relative failed completely
       if (!data && API_URL) {
         data = await attemptLogin(`${API_URL}/api/auth/login`).catch(() => null);
-      }
-      if (!data) {
-        data = await attemptLogin('http://127.0.0.1:5000/api/auth/login').catch(() => null);
       }
 
       if (data && data.success) {
