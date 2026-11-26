@@ -26,28 +26,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('moldins_user');
-        const token = localStorage.getItem('moldins_token');
-        if (saved && token) {
-          return JSON.parse(saved);
-        }
-      } catch {}
-    }
-    return null;
-  });
-  const [loading, setLoading] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return !localStorage.getItem('moldins_token');
-    }
-    return false;
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchCurrentUser = async () => {
     try {
-      // Check stored token in localStorage as fallback
       const token = typeof window !== 'undefined' ? localStorage.getItem('moldins_token') : null;
       if (!token) {
         setUser(null);
@@ -91,13 +74,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (err) {
-      // Network hiccup should NOT kick user out if they have local token
+      // Network glitch should NOT kick user out if they have valid local session
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // 1. Instant synchronous session restore from localStorage on client mount
+    if (typeof window !== 'undefined') {
+      try {
+        const token = localStorage.getItem('moldins_token');
+        const saved = localStorage.getItem('moldins_user');
+        if (token && saved) {
+          setUser(JSON.parse(saved));
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // 2. Silent background session verification
     fetchCurrentUser();
   }, []);
 

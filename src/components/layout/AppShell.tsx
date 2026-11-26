@@ -508,22 +508,9 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   const resolvedHeaderAction = actionButton || headerActions;
 
-  // Render protective loading/redirect screen only when user session is unverified
-  if ((!mounted && !user) || (loading && !user)) {
-    return (
-      <div className="min-h-screen bg-page flex flex-col items-center justify-center p-6 text-center select-none">
-        <div className="w-14 h-14 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-2xl shadow-xl shadow-brand/20 mb-4 animate-pulse">
-          M
-        </div>
-        <div className="flex items-center gap-2.5 text-text-primary font-semibold text-sm">
-          <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
-          <span>
-            {lang === 'hi' ? 'सत्र की पुष्टि की जा रही है...' : 'Verifying secure session...'}
-          </span>
-        </div>
-        <p className="text-xs text-text-muted mt-2">Moldins ERP Security Protection</p>
-      </div>
-    );
+  // If user is unverified or checking session, render clean background without intrusive splash
+  if (!user && (loading || !mounted)) {
+    return <div className="min-h-screen bg-page" />;
   }
 
   return (
