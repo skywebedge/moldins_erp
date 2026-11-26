@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)" />
+
+  <!-- Inner Subtle Border -->
+  <rect x="12" y="12" width="488" height="488" rx="96" fill="none" stroke="#3b82f6" stroke-width="4" stroke-opacity="0.3" />
+
+  <!-- Graphic: Concrete Paver / Factory Block + Construction Crane Accent -->
+  <g filter="url(#shadow)">
+    <!-- Main Architectural 'M' Block Structure -->
+    <!-- Left Pillar -->
+    <path d="M 112 368 L 112 168 Q 112 144 136 144 L 168 144 Q 188 144 196 160 L 256 264 L 316 160 Q 324 144 344 144 L 376 144 Q 400 144 400 168 L 400 368 Q 400 384 384 384 L 344 384 Q 328 384 328 368 L 328 248 L 276 340 Q 268 354 256 354 Q 244 354 236 340 L 184 248 L 184 368 Q 184 384 168 384 L 128 384 Q 112 384 112 368 Z" fill="url(#cyanGrad)" />
+
+    <!-- Isometric Paver Accent at the Bottom -->
+    <polygon points="256,380 340,420 256,460 172,420" fill="url(#accentGrad)" />
+    <polygon points="172,420 256,460 256,476 172,436" fill="#b45309" />
+    <polygon points="256,460 340,420 340,436 256,476" fill="#d97706" />
+
+    <!-- Site Highway Stripe / Level Symbol -->
+    <circle cx="256" cy="116" r="22" fill="url(#accentGrad)" />
+    <path d="M 248 116 L 256 104 L 264 116 Z" fill="#ffffff" />
+  </g>
+
+  <!-- Bilingual Label Subtle Bottom Brand -->
+  <text x="256" y="492" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="20" fill="#94a3b8" letter-spacing="3">MOLDINS ERP</text>
+</svg>
