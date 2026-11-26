@@ -87,7 +87,8 @@ export default function RecipesPage() {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('/api/recipes', {
+      const res = await fetch(`/api/recipes?_t=${Date.now()}`, {
+        cache: 'no-store',
         credentials: 'include',
         headers,
       });
@@ -117,7 +118,8 @@ export default function RecipesPage() {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch('/api/raw-materials', {
+      const res = await fetch(`/api/raw-materials?_t=${Date.now()}`, {
+        cache: 'no-store',
         credentials: 'include',
         headers,
       });
