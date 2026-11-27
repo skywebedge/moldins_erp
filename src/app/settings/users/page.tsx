@@ -232,9 +232,17 @@ export default function UsersManagementPage() {
         headers: getAuthHeaders(),
         credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || data.error || 'Failed to fetch user accounts');
+      if (res.status === 401 || res.status === 403) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('moldins_token');
+          localStorage.removeItem('moldins_user');
+        }
+        router.push('/login');
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || !data.success) {
+        throw new Error(data?.message || data?.error || 'Failed to fetch user accounts');
       }
       setUsers(data.data || data.users || []);
     } catch (err: any) {
