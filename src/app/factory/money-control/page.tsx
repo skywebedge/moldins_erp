@@ -99,6 +99,15 @@ export default function MoneyControlPage() {
         headers,
       });
 
+      if (res.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('moldins_token');
+          localStorage.removeItem('moldins_user');
+          window.location.href = '/login';
+        }
+        return;
+      }
+
       if (res.status === 403) {
         throw new Error(
           lang === 'hi'
@@ -113,12 +122,12 @@ export default function MoneyControlPage() {
             : 'Unable to retrieve Money Control audit analytics.'
         );
       }
-      const json = await res.json();
-      if (json.success) {
+      const json = await res.json().catch(() => null);
+      if (json && json.success) {
         setData(json.data);
       } else {
         throw new Error(
-          json.error || (lang === 'hi' ? 'ऑडिट डेटा लोड करने में विफल' : 'Failed to load audit data')
+          json?.error || (lang === 'hi' ? 'ऑडिट डेटा लोड करने में विफल' : 'Failed to load audit data')
         );
       }
     } catch (err: any) {

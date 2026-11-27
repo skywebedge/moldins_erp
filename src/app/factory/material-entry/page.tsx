@@ -120,6 +120,15 @@ export default function MaterialEntryPage() {
         fetch('/api/parties?type=SUPPLIER', { credentials: 'include', headers }),
       ]);
 
+      if (entriesRes.status === 401 || matsRes.status === 401 || suppliersRes.status === 401) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('moldins_token');
+          localStorage.removeItem('moldins_user');
+          window.location.href = '/login';
+        }
+        return;
+      }
+
       if (!entriesRes.ok) {
         throw new Error(
           lang === 'hi' ? 'आवक / खपत प्रविष्टियां लोड करने में विफल।' : 'Unable to load material entries.'
@@ -127,9 +136,9 @@ export default function MaterialEntryPage() {
       }
 
       const [entriesJson, matsJson, suppliersJson] = await Promise.all([
-        entriesRes.json(),
-        matsRes.json(),
-        suppliersRes.json(),
+        entriesRes.json().catch(() => ({ success: false })),
+        matsRes.json().catch(() => ({ success: false })),
+        suppliersRes.json().catch(() => ({ success: false })),
       ]);
 
       if (entriesJson.success) setEntries(entriesJson.data || []);
