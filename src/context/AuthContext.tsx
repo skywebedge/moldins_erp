@@ -192,6 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } finally {
       if (typeof window !== 'undefined') {
+        sessionStorage.setItem('moldins_just_logged_out', '1');
         localStorage.removeItem('moldins_token');
         localStorage.removeItem('moldins_user');
         localStorage.removeItem('token');

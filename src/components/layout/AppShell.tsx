@@ -63,6 +63,7 @@ import {
   Sun,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import { ROLE_LABELS, ROLE_PERMISSIONS, RolePermissions } from '../../config/permissions';
@@ -114,9 +115,81 @@ export const AppShell: React.FC<AppShellProps> = ({
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const toast = useToast();
   const { lang, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState<boolean>(false);
+  const prevPathRef = useRef<string>(pathname);
+  const isFirstNav = useRef<boolean>(true);
+
+  // Top-Right Toast Notification for Tab/Navigation Switch
+  useEffect(() => {
+    if (isFirstNav.current) {
+      isFirstNav.current = false;
+      return;
+    }
+    if (prevPathRef.current !== pathname) {
+      const MODULE_NAMES: Record<string, { hi: string; en: string }> = {
+        '/factory/dashboard': { hi: 'फैक्ट्री मुख्य डैशबोर्ड', en: 'Factory Dashboard' },
+        '/factory/products': { hi: 'उत्पाद मास्टर', en: 'Product Master' },
+        '/factory/raw-materials': { hi: 'कच्चा माल मास्टर', en: 'Raw Material Master' },
+        '/factory/recipes': { hi: 'रेसिपी मास्टर (फॉर्मूलेशन)', en: 'Recipe Master' },
+        '/factory/material-entry': { hi: 'सामग्री आवक / खपत', en: 'Material Inward & Usage' },
+        '/factory/production': { hi: 'दैनिक उत्पादन बैच', en: 'Daily Production' },
+        '/factory/breakage-electricity': { hi: 'टूट-फूट व बिजली मीटर', en: 'Breakage & Electricity' },
+        '/factory/low-stock': { hi: 'स्टॉक कमी व पूर्वानुमान', en: 'Low Stock & Forecast' },
+        '/factory/stock': { hi: 'स्टॉक रजिस्टर व बैलेंस', en: 'Stock Register' },
+        '/factory/quotations': { hi: 'कोटेशन व पूछताछ', en: 'Quotations & Enquiry' },
+        '/factory/orders': { hi: 'ग्राहक ऑर्डर्स / PO', en: 'Customer Orders / PO' },
+        '/factory/challans': { hi: 'डिलीवरी चालान व धर्मकांटा', en: 'Delivery Challans' },
+        '/factory/parties': { hi: 'पार्टी मास्टर (ग्राहक व सप्लायर)', en: 'Party Directory' },
+        '/factory/attendance': { hi: 'लेबर व स्टाफ हाजिरी', en: 'Attendance & HR' },
+        '/factory/rentals': { hi: 'फैक्ट्री किराया व लीज', en: 'Factory Rentals' },
+        '/factory/maintenance': { hi: 'मशीन मरम्मत व मेंटेनेंस', en: 'Machine Maintenance' },
+        '/factory/item-issues': { hi: 'टूल व उपकरण निकासी', en: 'Item Issues Register' },
+        '/factory/sub-contractors': { hi: 'सब-ठेकेदार खाता बही', en: 'Sub-contractor Ledger' },
+        '/factory/daily-expenses': { hi: 'दैनिक पेटी कैश खर्चे', en: 'Daily Expense Sheet' },
+        '/factory/money-control': { hi: 'मालिक वित्तीय नियंत्रण व ऑडिट', en: 'Owner Money Control' },
+        '/factory/reports': { hi: 'फैक्ट्री रिपोर्ट्स व MIS', en: 'Factory Reports & MIS' },
+        '/site/dashboard': { hi: 'साइट मुख्य डैशबोर्ड', en: 'Site Command Center' },
+        '/site/masters': { hi: 'साइट मास्टर डायरेक्टरी', en: 'Active Project Sites' },
+        '/site/purchases': { hi: 'साइट खरीद व आवक चालान', en: 'Site Material Inward' },
+        '/site/contractors': { hi: 'सिविल ठेकेदार व लेबर', en: 'Contractors Directory' },
+        '/site/measurements': { hi: 'MB माप पुस्तिका (M-Book)', en: 'M-Book Measurement Entry' },
+        '/site/payments': { hi: 'ठेकेदार भुगतान वाउचर', en: 'Contractor Payment Vouchers' },
+        '/site/vehicles': { hi: 'वाहन व मशीनरी फ्लीट', en: 'Vehicles & Machinery' },
+        '/site/vehicle-log': { hi: 'वाहन रन व किलोमीटर लॉग', en: 'Vehicle Run Log' },
+        '/site/diesel-log': { hi: 'मशीन डीजल खपत लॉग', en: 'Machine Diesel Log' },
+        '/site/water-tanker': { hi: 'पानी टैंकर रजिस्टर', en: 'Water Tanker Register' },
+        '/site/daily-expenses': { hi: 'साइट दैनिक खर्चे', en: 'Site Daily Expenses' },
+        '/site/issues': { hi: 'साइट अड़चन व रुकावट लॉग', en: 'Site Issues & Delays' },
+        '/site/testing-reports': { hi: 'क्यूब व सामग्री टेस्ट रिपोर्ट', en: 'Material Quality Testing' },
+        '/site/money-control': { hi: 'साइट बजट व वित्तीय निगरानी', en: 'Site Money Control' },
+        '/site/reports': { hi: 'साइट RA बिल व कॉस्ट रिपोर्ट', en: 'Site Cost & Billing Reports' },
+        '/settings/users': { hi: 'स्टाफ व यूजर अधिकार प्रबंधन', en: 'Staff & Access Management' },
+      };
+
+      const match = MODULE_NAMES[pathname];
+      if (match) {
+        toast.nav(lang === 'hi' ? match.hi : match.en, `📍 ${match.en}`);
+      } else {
+        const cleanName = pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Page';
+        toast.nav(`${cleanName.toUpperCase()} खुला`, '📍 Navigation');
+      }
+      prevPathRef.current = pathname;
+    }
+  }, [pathname, lang, toast]);
+
+  const handleLogout = () => {
+    toast.info(
+      lang === 'hi' ? 'सत्र सुरक्षित रूप से समाप्त किया जा रहा है...' : 'Signing out session safely...',
+      lang === 'hi' ? '🔒 सुरक्षित लॉगआउट' : '🔒 Secure Sign Out'
+    );
+    setUserDropdownOpen(false);
+    setTimeout(() => {
+      logout();
+    }, 350);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -693,10 +766,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                   <div className="border-t border-border mt-1 pt-1">
                     <button
                       type="button"
-                      onClick={() => {
-                        setUserDropdownOpen(false);
-                        logout();
-                      }}
+                      onClick={handleLogout}
                       className="w-full px-3.5 py-2 text-xs font-medium text-danger hover:bg-danger-bg flex items-center gap-2 cursor-pointer"
                     >
                       <LogOut className="w-4 h-4 stroke-[1.75]" />
@@ -922,7 +992,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  logout();
+                  handleLogout();
                 }}
                 className="w-full px-3 py-2 text-xs font-semibold text-danger hover:bg-danger-bg rounded flex items-center gap-2 cursor-pointer"
               >

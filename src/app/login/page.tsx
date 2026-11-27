@@ -67,7 +67,15 @@ function LoginForm() {
   useEffect(() => {
     router.prefetch('/factory/dashboard');
     router.prefetch('/site/dashboard');
-  }, [router]);
+
+    if (typeof window !== 'undefined' && sessionStorage.getItem('moldins_just_logged_out')) {
+      sessionStorage.removeItem('moldins_just_logged_out');
+      toast.info(
+        lang === 'hi' ? 'सत्र सुरक्षित रूप से समाप्त हो गया है।' : 'Your session has been logged out safely.',
+        lang === 'hi' ? '🔒 सुरक्षित लॉगआउट' : '🔒 Logged Out Safely'
+      );
+    }
+  }, [router, lang, toast]);
 
   const executeLogin = async (id: string, pass: string) => {
     setErrorMessage('');
@@ -114,8 +122,11 @@ function LoginForm() {
 
       if (result.success) {
         toast.success(
-          lang === 'hi' ? 'लॉगिन सफल! डैशबोर्ड खुल रहा है...' : 'Login successful! Opening dashboard...',
-          lang === 'hi' ? 'स्वागत है' : 'Welcome'
+          lang === 'hi'
+            ? `मालिक / मुख्य कार्यकारी सत्र सक्रिय (${result.user?.name || 'Owner'})`
+            : `Welcome back, ${result.user?.name || 'Master Admin'}! Session active.`,
+          lang === 'hi' ? '🎉 लॉगिन सफल (Login Successful)' : '🎉 Login Successful',
+          4500
         );
         const defaultRoute =
           result.user?.role === 'SITE_SUPERVISOR' || result.user?.role === 'SITE_MANAGER'
